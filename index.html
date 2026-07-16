@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進んで！コインロード - 文化祭3D体感ゲーム</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- TensorFlow.js and MoveNet -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+</head>
+<body>
+    <!-- 3Dゲーム描画用のキャンバス -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UIオーバーレイ -->
+    <div id="ui-container">
+        <!-- スタート/ロビー画面 -->
+        <div id="lobby-screen" class="screen active">
+            <h1 class="game-title">進んで！<span>コインロード</span></h1>
+            <p class="subtitle">文化祭3Dカメラトラッキング体感ゲーム</p>
+            
+            <div class="input-group">
+                <label for="player-name">プレイヤー名を入力</label>
+                <input type="text" id="player-name" maxlength="10" placeholder="例: PLAYER-1" value="PLAYER-1">
+            </div>
+
+            <!-- カメラ準備状態表示 -->
+            <div id="camera-status" class="status-box">
+                <span class="status-dot red"></span>
+                <span class="status-text">カメラを準備中...</span>
+            </div>
+
+            <button id="start-btn" disabled>ゲームスタート</button>
+
+            <div class="instructions">
+                <h3>遊び方</h3>
+                <ul>
+                    <li>カメラの前で<strong>左右</strong>にステップを踏むと、キャラも左右に移動します。</li>
+                    <li>カメラに<strong>近づく</strong>と前に進み、<strong>離れる</strong>と後ろに下がります。</li>
+                    <li>迫りくる障害物をかわしながら、コインをたくさん集めてゴールを目指そう！</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- プレイ中UI -->
+        <div id="play-screen" class="screen">
+            <div class="hud-top">
+                <div class="hud-item score-container">
+                    <span class="hud-label">COINS</span>
+                    <span id="score-val" class="hud-value">0</span>
+                </div>
+                <div class="hud-item distance-container">
+                    <span class="hud-label">DISTANCE</span>
+                    <span id="distance-val" class="hud-value">300m</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div id="result-screen" class="screen">
+            <h1 class="result-title">FINISH!</h1>
+            <p class="result-subtitle">ゴール到達！お疲れ様でした！</p>
+            
+            <div class="result-stats">
+                <div class="stat-box">
+                    <span class="stat-label">プレイヤー</span>
+                    <span id="result-name" class="stat-value">-</span>
+                </div>
+                <div class="stat-box highlighted">
+                    <span class="stat-label">獲得スコア</span>
+                    <span id="result-score" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <div class="ranking-section">
+                <h3>リアルタイムランキング（仮）</h3>
+                <div id="ranking-list" class="ranking-list">
+                    <!-- ランキングデータがここに挿入される -->
+                    <div class="ranking-item loading">読み込み中...</div>
+                </div>
+            </div>
+
+            <button id="retry-btn">もう一度あそぶ</button>
+        </div>
+    </div>
+
+    <!-- カメラプレビューとMoveNet骨格描画（デバッグ用・画面左上に小さく配置） -->
+    <div id="camera-container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="pose-canvas"></canvas>
+    </div>
+
+    <!-- デバッグ用エラー表示エリア -->
+    <div id="debug-error-console" style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; max-width: 90%; z-index: 9999; display: none;">
+        <h3>エラーが発生しました:</h3>
+        <pre id="debug-error-text" style="white-space: pre-wrap; margin: 0;"></pre>
+    </div>
+
+    <!-- ゲームロジック -->
+    <script src="game.js"></script>
+</body>
+</html>

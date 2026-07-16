@@ -1,0 +1,459 @@
+/* 全般設定 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    font-family: 'Noto Sans JP', 'Orbitron', sans-serif;
+    background-color: #05050a;
+    color: #ffffff;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Three.js キャンバス */
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* UIコンテナ */
+#ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none; /* 下の3D空間へのクリック等の干渉を防ぐ、各画面要素でpointer-events: autoにする */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 画面共通スタイル（ロビー、プレイ中HUD、リザルト） */
+.screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    background: rgba(5, 5, 10, 0.4);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ロビー画面 */
+#lobby-screen {
+    background: radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, rgba(5, 5, 10, 0.95) 100%);
+}
+
+.game-title {
+    font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 30px rgba(0, 255, 255, 0.3);
+    margin-bottom: 0.5rem;
+    animation: pulse 2s infinite alternate;
+}
+
+.game-title span {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #a0aec0;
+    margin-bottom: 3rem;
+    letter-spacing: 4px;
+}
+
+/* 入力グループ */
+.input-group {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.8rem 1.2rem;
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+    color: #ffffff;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: #00ffff;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
+/* カメラステータス */
+.status-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    margin-bottom: 2rem;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.8rem;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.status-dot.red {
+    background-color: #ff4757;
+    color: #ff4757;
+}
+
+.status-dot.green {
+    background-color: #2ed573;
+    color: #2ed573;
+    animation: blink 1s infinite alternate;
+}
+
+.status-text {
+    font-size: 0.9rem;
+    color: #e2e8f0;
+}
+
+/* ボタン共通 */
+button {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 1.4rem;
+    font-weight: bold;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+}
+
+#start-btn {
+    background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+    color: #05050a;
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+    margin-bottom: 3rem;
+}
+
+#start-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 255, 255, 0.6);
+}
+
+#start-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+#start-btn:disabled {
+    background: #4a5568;
+    color: #718096;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 遊び方説明 */
+.instructions {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    text-align: left;
+}
+
+.instructions h3 {
+    font-size: 1.1rem;
+    color: #00ffff;
+    margin-bottom: 0.8rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.instructions ul {
+    list-style-type: none;
+}
+
+.instructions li {
+    font-size: 0.95rem;
+    color: #cbd5e0;
+    margin-bottom: 0.6rem;
+    line-height: 1.6;
+    position: relative;
+    padding-left: 1.2rem;
+}
+
+.instructions li::before {
+    content: "✦";
+    position: absolute;
+    left: 0;
+    color: #ffd700;
+}
+
+/* プレイ中 HUD */
+#play-screen {
+    background: transparent;
+    pointer-events: none;
+    backdrop-filter: none;
+}
+
+.hud-top {
+    position: absolute;
+    top: 2rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 3rem;
+}
+
+.hud-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 0.8rem 1.8rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.hud-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    color: #a0aec0;
+    letter-spacing: 2px;
+    margin-bottom: 0.2rem;
+}
+
+.hud-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.score-container .hud-value {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* リザルト画面 */
+.result-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 5rem;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    margin-bottom: 0.5rem;
+    animation: scaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-subtitle {
+    font-size: 1.2rem;
+    color: #a0aec0;
+    margin-bottom: 2.5rem;
+}
+
+.result-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.2rem 2.5rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 180px;
+}
+
+.stat-box.highlighted {
+    background: rgba(255, 215, 0, 0.05);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    margin-bottom: 0.4rem;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: bold;
+    font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+}
+
+.stat-box.highlighted .stat-value {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* ランキング */
+.ranking-section {
+    width: 100%;
+    max-width: 450px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.ranking-section h3 {
+    font-size: 1.1rem;
+    color: #00ffff;
+    text-align: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.ranking-item.loading {
+    justify-content: center;
+    color: #718096;
+}
+
+.ranking-item.top-three {
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    font-weight: bold;
+}
+
+#retry-btn {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+    color: #05050a;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+#retry-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.6);
+}
+
+/* デバッグカメラプレビュー */
+#camera-container {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    width: 200px;
+    height: 150px;
+    border-radius: 12px;
+    border: 2px solid rgba(0, 255, 255, 0.4);
+    overflow: hidden;
+    z-index: 20;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    background-color: #000000;
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* カメラ画像を鏡像反転表示 */
+}
+
+#pose-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(-1); /* 描画も反転 */
+    pointer-events: none;
+}
+
+/* アニメーション */
+@keyframes pulse {
+    0% {
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+    100% {
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.9), 0 0 40px rgba(0, 255, 255, 0.4);
+    }
+}
+
+@keyframes blink {
+    0% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
