@@ -195,7 +195,7 @@ button {
     box-shadow: none;
 }
 
-/* 遊び方説明 */
+/* 操作説明 */
 .instructions {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -234,7 +234,7 @@ button {
     color: #ffd700;
 }
 
-/* プレイ中 HUD */
+/* 実行中 HUD */
 #play-screen {
     background: transparent;
     pointer-events: none;
@@ -284,7 +284,7 @@ button {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-/* リザルト画面 */
+/* 結果画面 */
 .result-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 5rem;
@@ -341,7 +341,7 @@ button {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-/* ランキング */
+/* 記録一覧 */
 .ranking-section {
     width: 100%;
     max-width: 450px;
@@ -400,7 +400,7 @@ button {
     box-shadow: 0 10px 25px rgba(255, 215, 0, 0.6);
 }
 
-/* デバッグカメラプレビュー */
+/* カメラプレビュー */
 #camera-container {
     position: absolute;
     top: 1.5rem;

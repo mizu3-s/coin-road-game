@@ -3,35 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>進んで！コインロード - 文化祭3D体感</title>
+    <title>3Dモーショントラッキング体感学習 - 文化祭展示</title>
+    <meta name="description" content="TensorFlow.jsとMoveNetを活用した姿勢推定・3D空間インタラクション学習教材。文化祭でのSTEAM教育展示用Webアプリケーションです。">
+    <meta name="keywords" content="STEAM教育,姿勢推定,MoveNet,TensorFlow.js,Three.js,体感学習,文化祭展示">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    <!-- CSS -->
+    <!-- スタイルシート -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Three.js -->
+    <!-- Three.js 3Dレンダリングエンジン -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- TensorFlow.js and MoveNet -->
+    <!-- TensorFlow.js 姿勢推定ライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 </head>
 <body>
-    <!-- 3Dゲーム描画用のキャンバス -->
+    <!-- 3D描画用キャンバス -->
     <canvas id="game-canvas"></canvas>
 
     <!-- UIオーバーレイ -->
     <div id="ui-container">
-        <!-- スタート/ロビー画面 -->
+        <!-- 開始画面 -->
         <div id="lobby-screen" class="screen active">
             <h1 class="game-title">進んで！<span>コインロード</span></h1>
-            <p class="subtitle">文化祭3Dカメラトラッキング体感ゲーム</p>
+            <p class="subtitle">文化祭 3Dモーショントラッキング体感展示</p>
             
             <div class="input-group">
-                <label for="player-name">プレイヤー名を入力</label>
+                <label for="player-name">体験者名を入力</label>
                 <input type="text" id="player-name" maxlength="10" placeholder="例: PLAYER-1" value="PLAYER-1">
             </div>
 
@@ -41,23 +43,23 @@
                 <span class="status-text">カメラを準備中...</span>
             </div>
 
-            <button id="start-btn" disabled>ゲームスタート</button>
+            <button id="start-btn" disabled>体験スタート</button>
 
             <div class="instructions">
-                <h3>遊び方</h3>
+                <h3>操作方法</h3>
                 <ul>
-                    <li>カメラの前で<strong>左右</strong>にステップを踏むと、キャラも左右に移動します。</li>
+                    <li>カメラの前で<strong>左右</strong>にステップを踏むと、キャラクターも左右に移動します。</li>
                     <li>カメラに<strong>近づく</strong>と前に進み、<strong>離れる</strong>と後ろに下がります。</li>
-                    <li>迫りくる障害物をかわしながら、コインをたくさん集めてゴールを目指そう！</li>
+                    <li>3D空間内のオブジェクトを避けながら、アイテムを集めてゴールを目指しましょう！</li>
                 </ul>
             </div>
         </div>
 
-        <!-- プレイ中UI -->
+        <!-- 実行中UI -->
         <div id="play-screen" class="screen">
             <div class="hud-top">
                 <div class="hud-item score-container">
-                    <span class="hud-label">COINS</span>
+                    <span class="hud-label">ITEMS</span>
                     <span id="score-val" class="hud-value">0</span>
                 </div>
                 <div class="hud-item distance-container">
@@ -67,47 +69,47 @@
             </div>
         </div>
 
-        <!-- リザルト画面 -->
+        <!-- 結果画面 -->
         <div id="result-screen" class="screen">
             <h1 class="result-title">FINISH!</h1>
             <p class="result-subtitle">ゴール到達！お疲れ様でした！</p>
             
             <div class="result-stats">
                 <div class="stat-box">
-                    <span class="stat-label">プレイヤー</span>
+                    <span class="stat-label">体験者</span>
                     <span id="result-name" class="stat-value">-</span>
                 </div>
                 <div class="stat-box highlighted">
-                    <span class="stat-label">獲得スコア</span>
+                    <span class="stat-label">獲得ポイント</span>
                     <span id="result-score" class="stat-value">0</span>
                 </div>
             </div>
 
             <div class="ranking-section">
-                <h3>リアルタイムランキング（仮）</h3>
+                <h3>体験者記録（仮）</h3>
                 <div id="ranking-list" class="ranking-list">
-                    <!-- ランキングデータがここに挿入される -->
+                    <!-- 記録データがここに挿入される -->
                     <div class="ranking-item loading">読み込み中...</div>
                 </div>
             </div>
 
-            <button id="retry-btn">もう一度あそぶ</button>
+            <button id="retry-btn">もう一度体験する</button>
         </div>
     </div>
 
-    <!-- カメラプレビューとMoveNet骨格描画（デバッグ用・画面左上に小さく配置） -->
+    <!-- カメラプレビューとMoveNet骨格描画（画面左上に小さく配置） -->
     <div id="camera-container">
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="pose-canvas"></canvas>
     </div>
 
-    <!-- デバッグ用エラー表示エリア -->
+    <!-- エラー表示エリア -->
     <div id="debug-error-console" style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; max-width: 90%; z-index: 9999; display: none;">
         <h3>エラーが発生しました:</h3>
         <pre id="debug-error-text" style="white-space: pre-wrap; margin: 0;"></pre>
     </div>
 
-    <!-- ゲームロジック -->
+    <!-- アプリケーションロジック -->
     <script src="game.js"></script>
 </body>
 </html>

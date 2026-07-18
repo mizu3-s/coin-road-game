@@ -1,5 +1,5 @@
 // ==========================================
-// 「進んで！コインロード」ゲームロジック（完全改善版・修正）
+// 3Dモーショントラッキング体感学習アプリケーション（文化祭展示版）
 // ==========================================
 
 // --- グローバルエラーキャッチ ---
@@ -30,7 +30,7 @@ ROAD_SEGMENTS[-200] = 'narrow'; // Z = -200〜-210 は細い道
 ROAD_SEGMENTS[-230] = 'gap';    // Z = -230〜-240 は道が途切れている
 ROAD_SEGMENTS[-260] = 'split';  // Z = -260〜-270 は中央に穴
 
-// --- ゲーム状態管理 ---
+// --- アプリケーション状態管理 ---
 const gameState = {
     mode: 'lobby', // 'lobby', 'playing', 'result'
     score: 0,
@@ -703,7 +703,7 @@ class SpikeWall {
 }
 
 // ==========================================
-// 4. コース上のコイン・敵キャラクター配置
+// 4. コース上のアイテム・オブジェクト配置
 // ==========================================
 
 function buildCourse() {
@@ -816,7 +816,7 @@ function buildCourse() {
     }
 }
 
-// コイン獲得時のパーティクル
+// アイテム取得時のパーティクルエフェクト
 function spawnExplosion(pos) {
     const particleCount = 10;
     const geometry = new THREE.SphereGeometry(0.06, 8, 8);
@@ -1017,7 +1017,7 @@ function processPoseData(pose) {
 }
 
 // ==========================================
-// 7. ゲーム制御
+// 7. アプリケーション制御
 // ==========================================
 
 function startGame() {
@@ -1096,7 +1096,7 @@ function finishGame() {
 }
 
 // ==========================================
-// 8. メインゲームループ & アニメーション
+// 8. メインループ & アニメーション
 // ==========================================
 
 function animate() {
@@ -1192,7 +1192,7 @@ function animate() {
 
         // --- 5. モーションシンクロの調整 (止まるモーションを廃止し常時走行) ---
         if (!gameState.isFalling) {
-            // ゲーム中、常に走るモーションを再生
+            // 実行中、常に走行モーションを再生
             gameState.legSwingTime += 0.15; 
             animatePlayerModel(gameState.legSwingTime);
         } else {
@@ -1202,12 +1202,12 @@ function animate() {
             playerGroup.rightArm.rotation.x = Math.sin(Date.now() * 0.05) * 1.0;
         }
 
-        // --- 6. 敵キャラクターの更新 ---
+        // --- 6. オブジェクトの更新 ---
         obstacles.forEach(obs => {
             obs.update(gameState.playerZ);
         });
 
-        // --- 7. コインの更新と生えるアニメーション ---
+        // --- 7. アイテムの更新と出現アニメーション ---
         coins.forEach(coin => {
             coin.rotation.z += 0.05;
 
@@ -1359,7 +1359,7 @@ function triggerCameraShake(intensity = 0.3) {
 }
 
 // ==========================================
-// 10. データ連携 (GAS・スプレッドシート)
+// 10. データ連携 (記録送信)
 // ==========================================
 
 async function sendScoreToGAS(playerName, score) {
@@ -1373,7 +1373,7 @@ async function sendScoreToGAS(playerName, score) {
 
     const rankingList = document.getElementById('ranking-list');
     if (rankingList) {
-        rankingList.innerHTML = '<div class="ranking-item loading">スコアを送信中...</div>';
+        rankingList.innerHTML = '<div class="ranking-item loading">記録を送信中...</div>';
     }
 
     try {
@@ -1427,7 +1427,7 @@ function showLocalRanking(playerName, score) {
             }
             div.innerHTML = `
                 <span>No.${index + 1} ${item.name}</span>
-                <span>${item.score} 枚</span>
+                <span>${item.score} pt</span>
             `;
             rankingList.appendChild(div);
         });
